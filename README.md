@@ -2,7 +2,7 @@
 
 面向公共大屏和视频画面的内容监测与人工审核平台。系统将视频采样、屏幕区域校正、多标签筛查、证据留存、辅助模型建议和风险处置连接为可追溯的工作流程。
 
-## 现有功能
+## 功能概览
 
 - **视频接入**：本地视频、RTSP、可由后端解码的 HTTP 视频流，以及连接在服务主机上的 USB／内置摄像头；最多同时运行四路。
 - **持续监测**：采样截图、屏幕区域标定、断流重连、计划时段、期望运行状态恢复，以及采集和推理状态展示。
@@ -11,9 +11,9 @@
 - **人工审核**：待审批次、关键帧与上下文、原图／区域图查看、快捷键、审核撤销、操作记录和待处置／处理中／已解决流程。
 - **运行管理**：管理员与审核员账号、站内通知、通用 Webhook、证据保留期与配额、数据库迁移及备份恢复。
 
-### 能力边界
+### 模型与识别范围
 
-默认 `demo-rules` 为颜色演示规则，用于验证采集、事件和审核流程。仓库不包含已完成真实业务验收的分类模型，也不提供业务准确率承诺。训练模型须使用独立标注数据验证，并完成模型及策略准入后才能启用自动告警。
+内置 `demo-rules` 使用颜色规则演示采集、事件和审核流程，不具备真实风险识别能力。仓库不附带生产模型权重。生产环境需训练或导入经过独立标注数据验证的模型，并完成模型与策略准入后启用自动告警。
 
 大模型结果作为辅助建议记录，不能替代人工结论。模型必须实际支持图片输入；具体模型 ID、可用地区和调用权限以服务商账号为准。自动云端补充默认关闭，启用前需要为对应视频源配置发送许可。
 
@@ -21,10 +21,10 @@
 
 | 项目 | 要求与用途 |
 |---|---|
-| Python | 以 64 位 Python 3.11 为验证基线，建议使用项目虚拟环境；启动检查要求 3.11 或以上，其他版本仍需单独验证 |
-| Windows | 当前提供 Windows 启停脚本，依赖 Windows PowerShell；需有运行数据目录的读写权限 |
+| Python | 测试基线为 64 位 Python 3.11，推荐使用项目虚拟环境；启动检查要求 3.11 或以上，其他版本不在测试基线内 |
+| Windows | 启停脚本依赖 Windows PowerShell；运行账号需具备数据目录读写权限 |
 | Web 工作台 | FastAPI、Uvicorn、OpenCV Headless、NumPy、Pydantic、Pillow、HTTPX；依赖清单位于 `src/task2_video_panel/framework_part/requirements.txt` |
-| ONNX 推理 | 使用 ONNX Runtime；当前在线分类器使用 CPU，导入时需同时提供 `model.onnx` 和 `manifest.json` |
+| ONNX 推理 | 在线分类器使用 ONNX Runtime CPU 推理；导入时需同时提供 `model.onnx` 和 `manifest.json` |
 | 训练与完整回归 | 额外需要 PyTorch、Torchvision、scikit-learn、PyYAML、pytest 等，见 `requirements-dev.txt` |
 | 本地视觉大模型（可选） | llama.cpp 的 `llama-server`、支持图片的 GGUF 模型和匹配的 mmproj 投影文件；模型文件需另行准备 |
 | 云端模型（可选） | 可访问的 API 地址、有效凭据及账号支持的模型；调用可能产生服务商费用 |
@@ -71,13 +71,13 @@ start_windows.bat
 | `model_path` | GGUF 模型文件 | 启用本地模型时填写 |
 | `mmproj` | 匹配的视觉投影文件 | 启用本地图片模式时填写 |
 
-基础工作台不要求填写模型文件路径。使用本地视觉模型时，配置文件后运行 `start_local_model_vision.bat`，等待服务就绪，再在工作台测试连接；结束时运行 `stop_local_model.bat`。
+基础工作台不要求填写模型文件路径。使用本地视觉模型时，填写模型配置后运行 `start_local_model_vision.bat`，等待服务就绪，再在工作台测试连接；结束时运行 `stop_local_model.bat`。
 
 云端 API 地址、模型 ID、调用次数和密钥在工作台“设置 → 本地与云端模型接口”中配置。Windows 支持当前用户 DPAPI 加密保存密钥；Linux 使用服务环境变量。勿将真实凭据写入示例配置或提交到仓库。接口与自动调用规则见[模型接口说明](docs/MODEL_INTERFACES.md)。
 
 ## Linux / WSL2 迁移
 
-项目提供跨平台 Python 后端及 `deploy/screen-guard.service.example`，可作为后续 Linux 部署基础。Windows 的 BAT／PowerShell 启动器需替换为 Python 命令或 systemd 服务。
+后端采用跨平台 Python 实现，可迁移至 Linux／WSL2。Linux 使用 `manage.py` 启动服务，systemd 配置模板位于 `deploy/screen-guard.service.example`；Windows 的 BAT／PowerShell 启动器不用于 Linux 部署。
 
 在已安装 Python 3.11 及 venv 支持的 Linux 环境中，从项目根目录执行：
 
@@ -88,7 +88,7 @@ python3.11 -m venv .venv
 .venv/bin/python -B src/task2_video_panel/manage.py --data-dir ./windows_preview/runtime/data serve --accounts --port 8765
 ```
 
-后续迁移还需要完成：
+迁移配置：
 
 1. 按 Linux 目录、用户权限和服务环境调整 systemd 模板；生产服务可使用独立的数据目录。
 2. 使用 Linux 版本的 llama.cpp，重新设置模型路径、连接地址和凭据；Windows DPAPI 密钥不能直接在 Linux 解密。
@@ -96,7 +96,7 @@ python3.11 -m venv .venv
 4. 验证编解码支持、网络连通及设备权限；WSL2 的主机摄像头访问需单独配置和验证。
 5. 远程使用通过 HTTPS 反向代理接入，并设置实际允许的主机名；应用保持回环监听。
 
-Linux／WSL2 安装、真实 RTSP 设备及长时间连续运行仍需目标环境验收。Windows 依赖版本记录仅供参考，不作为 Linux 依赖锁定文件。
+**平台验证范围**：自动回归与启动验证覆盖 Windows；Linux／WSL2 为待验证部署目标。部署验收包括依赖安装、真实 RTSP 接入和连续运行测试。Windows 依赖版本记录仅供参考，不作为 Linux 依赖锁定文件。
 
 ## 工程目录与测试
 
@@ -118,17 +118,17 @@ python -m pip install -r requirements-dev.txt
 python -X utf8 -B tests/run_tests.py
 ```
 
-如需 GPU 训练，应按设备环境准备兼容的 PyTorch，再安装其余开发依赖。默认回归使用隔离数据和模拟模型接口，不发起真实云端调用。工程测试通过不等于真实风险识别准确率达标。
+如需 GPU 训练，应按设备环境准备兼容的 PyTorch，再安装其余开发依赖。默认回归使用隔离数据和模拟模型接口，不发起真实云端调用。业务识别指标由独立标注数据和实际场景测试评估。
 
 更多说明：[工程结构](docs/工程结构.md) · [测试入口](tests/README.md) · [训练与评测](docs/WORKBENCH.md) · [数据集规范](docs/DATASET.md) · [离线横评](docs/OFFLINE_BENCHMARK.md)
 
-## 后续规划
+## 发展规划
 
-以下为计划方向，尚未作为已完成功能交付：
-
-- **持续运行**：系统总容量管理、日志轮转、定时备份、模型服务就绪检查和运行守护。
-- **设备与画质**：黑屏、遮挡、疑似冻结、持续模糊及屏幕区域偏移检测。
-- **审核效率**：相似事件分组、事件时间线、积压预测及可追溯的批量操作。
-- **识别与资源优化**：真实数据训练和独立评估、OCR 辅助、变化触发采样，以及按实测结果选择 GPU、量化或硬件解码。
-- **模型调用管理**：费用估算、预算提醒，以及连续失败后暂停调用的机制。
-- **部署与质量**：Windows／Linux 依赖锁定、浏览器自动化测试、版本展示、真实摄像头及 24／72 小时连续运行验收。
+| 方向 | 规划内容 |
+|---|---|
+| 持续运行 | 系统总容量管理、日志轮转、定时备份、模型服务就绪检查与运行守护 |
+| 设备与画质 | 黑屏、遮挡、画面冻结、持续模糊及屏幕区域偏移检测 |
+| 审核效率 | 相似事件分组、事件时间线、积压预测及可追溯的批量操作 |
+| 识别与性能 | 真实数据训练与独立评估、OCR 辅助、变化触发采样；基于性能测试评估 GPU 推理、量化和硬件解码 |
+| 模型调用管理 | 费用估算、预算提醒及连续调用失败后的自动暂停机制 |
+| 部署与质量 | Windows／Linux 依赖锁定、浏览器自动化测试、版本信息展示、真实摄像头适配及 24／72 小时连续运行测试 |

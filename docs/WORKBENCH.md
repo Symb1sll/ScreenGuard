@@ -5,7 +5,7 @@
 - `screen_guard_core.py`：预处理契约、四点透视、画质提示、分数与逐类策略、模型包。
 - `framework_part/app/services`：配置/区域版本、采集与任务、事件与审核、证据留存、模型注册、离线对照。
 - `framework_part/app/routers/api.py`：工作台 API；本机会话和 CSRF 保护由 main.py 提供。
-- `recognition_part/training`：新训练、验证集阈值候选和包导出。
+- `recognition_part/training`：模型训练、验证集阈值标定和模型包导出。
 - `recognition_part/evaluation/replay_acceptance.py`：固定视频集完整回放，复用在线事件聚合。
 - `services/source_profiles.py`、`auto_review.py`：每路版本配置及持久化自动辅助审核队列。
 - `services/maintenance.py`、`diagnostics.py`：独立维护线程、采集和推理健康指标。
@@ -24,7 +24,7 @@ python -X utf8 -B tests/run_tests.py
 
 入口自动生成新的临时目录，不读取工作台运行库。覆盖模型契约、权限、事件版本、自动调用、故障、配置和恢复；接口回归使用模拟提供商，不产生真实云端调用。模型一致性使用合成训练权重，不代表业务识别准确率。
 
-## 新预处理训练
+## 训练示例
 
 从工程根目录运行以下命令；`python` 应指向已安装训练依赖的解释器。
 
@@ -43,7 +43,7 @@ python -B src/task2_video_panel/recognition_part/training/train_multilabel_class
 python -B src/task2_video_panel/recognition_part/training/calibrate_review_policy.py --predictions artifacts/training/validation/predictions.csv --out artifacts/training/review_policy.json --data-kind real --min-precision 0.98 --review-recall 0.9 --min-support 20
 ```
 
-工具拒绝用 test 选阈值。各类需满足正/负样本数与高阈值命中支持数；目标未满足时不会取得准入，报告 approved_for_alerts 始终为 false。样本内结果只用于候选选择，独立测试通过与业务审核是另一个步骤。图像阈值标定不证明时序事件性能。
+阈值标定仅使用 val 集。各类候选需满足正负样本数与高阈值命中支持数要求；生成报告的 `approved_for_alerts` 固定为 `false`。候选策略须经过独立测试和业务审核，图像级指标与视频时序事件指标分别评估。
 
 ## 模型包
 
@@ -53,9 +53,9 @@ python -B src/task2_video_panel/recognition_part/training/export_model_package.p
 
 可附加 `--policy-report artifacts/training/review_policy.json`。输出目录必须不存在；包含 model.onnx 和 manifest.json，随后在“素材与模型”中导入这两个文件。
 
-导入验证模型哈希、标签顺序、尺寸、预处理与 logits 输出，执行 ONNX 预热；不接受外部权重文件。模型导出一律为 candidate，不自动授予真实业务能力。
+导入验证模型哈希、标签顺序、尺寸、预处理与 logits 输出，执行 ONNX 预热；不接受外部权重文件。导出模型的状态为 `candidate`，生产告警需满足下述准入条件。
 
-自动告警必须同时满足：模型声明已业务验证、验证报告 approved_for_alerts=true 且 data_kind=real、每个启用类别 eligible=true、当前逐类配置与该包验证配置一致、用户开启自动告警、同类高分连续确认与冷却规则。该报告是本机操作者审核的元数据，不是签名鉴证；不要给未经验收的模型修改状态以绕过门槛。
+自动告警必须同时满足：模型声明已业务验证、验证报告 approved_for_alerts=true 且 data_kind=real、每个启用类别 eligible=true、当前逐类配置与该包验证配置一致、用户开启自动告警、同类高分连续确认与冷却规则。验证报告由本地操作者维护，不含数字签名；准入状态须依据实际测试与审核结果填写。
 
 模型或阈值切换前，在页面运行对应候选对照，再带入设置草稿并保存；采集任务下次启动时使用新配置。回滚同样保留历史和对照记录。
 
@@ -86,12 +86,12 @@ python -B src/task2_video_panel/recognition_part/evaluation/replay_acceptance.py
 
 模型参数也接受 demo-rules。settings 文件为工作台 Settings 对象或含 settings 字段的 API 响应；不提供则使用默认策略。输出目录必须不存在。输出 report.json 与独立运行库/证据，不修改工作台配置。
 
-指标按类别以时间区间 IoU≥0.3 一对一匹配。事件召回覆盖 review/alert；告警精确率仅评价实际通过准入和连续确认的 alert。未标注、无真实告警或缺少分母时输出 null，不冒充零误报或满分。按小时/天换算是回放负担估计，不是连续运行实测；完整解码、推理失败数与耗时单独报告。画质规则提示细节不足时进入未知，不直接丢弃。
+指标按类别以时间区间 IoU≥0.3 一对一匹配。事件召回覆盖 review/alert；告警精确率仅评价实际通过准入和连续确认的 alert。未标注、无真实告警或缺少分母时，相关指标输出 `null`。小时／天维度的指标由回放结果折算，用于估计审核负担。解码与推理失败数、处理耗时单独报告；画质不足的样本标记为未知并保留。
 
 低分随机抽检的种子由视频哈希固定，用于可重复对照。用户误报备注和真实审核耗时在工作台留档；导出的人工反馈仍标为 candidate，不能直接自动训练。
 
 ## 运行和留存边界
 
-采样是固定时间间隔；尚未加入变化触发、OCR 和硬件解码。当前在线 ONNX 使用 CPU，训练可用现有 GPU。每路可配置自动本地辅助审核及授权云端补充建议，云端调用按提供商账户计费。AI 建议不改变人工结论或绕过自动告警准入。
+视频采样采用固定时间间隔，在线 ONNX 推理使用 CPU；变化触发、OCR 和硬件解码属于规划功能。训练支持兼容的 GPU 环境。每路可配置自动本地辅助审核及授权云端补充，云端调用按提供商账户计费。AI 建议独立于人工结论和自动告警准入。
 
-证据配额不包含上传视频、模型、数据库和日志；已确认风险证据保留。期满疑似证据会清理，事件/审核摘要保留。日复核时间划分待审批次并显示下次安排。管理员/审核员账号、通知签收和风险处置已实现；实际 RTSP 长时回放和 WSL2 迁移尚未验收。
+证据配额不包含上传视频、模型、数据库和日志；已确认风险证据保留。期满疑似证据会清理，事件/审核摘要保留。日复核时间划分待审批次并显示下次安排。工作台提供管理员／审核员账号、通知签收和风险处置。平台与设备测试范围见 [README](../README.md#linux--wsl2-迁移)。
