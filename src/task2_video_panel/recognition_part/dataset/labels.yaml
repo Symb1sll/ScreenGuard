@@ -1,0 +1,18 @@
+version: 1
+normal_rule: "当且仅当所有风险标签均为 0 时，样本视为正常内容。"
+labels:
+  - key: sexual_vulgar
+    name_zh: 涉黄/低俗内容
+    description: 裸露、色情暗示、成人服务推广、明显低俗性内容。
+  - key: gambling
+    name_zh: 涉赌内容
+    description: 赌博、博彩、赌场、下注、非法彩票或明显导流信息。
+  - key: drugs_contraband
+    name_zh: 涉毒/违禁品
+    description: 毒品、违禁药物、违禁品交易或明显相关推广。
+  - key: violence_terror
+    name_zh: 暴力/恐怖内容
+    description: 血腥暴力、武器伤害、恐怖主义宣传或明显危险暴力场景。
+  - key: privacy_leak
+    name_zh: 隐私泄露
+    description: 身份证号、手机号、住址、银行卡、未脱敏证件等可识别个人敏感信息。

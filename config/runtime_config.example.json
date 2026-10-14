@@ -1,0 +1,11 @@
+{
+  "python": ".venv/Scripts/python.exe",
+  "data_dir": "windows_preview/runtime/data",
+  "port": 8765,
+  "model_port": 8088,
+  "model_threads": 4,
+  "model_path": "",
+  "server_path": "",
+  "mmproj": "",
+  "state_dir": "windows_preview"
+}

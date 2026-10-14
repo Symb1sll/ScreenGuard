@@ -1,0 +1,33 @@
+# Frigate 性能调优示例，仅作为外围接入建议
+mqtt:
+  enabled: true
+  host: 127.0.0.1
+
+ffmpeg:
+  hwaccel_args: preset-vaapi
+
+# 大屏内容监管通常使用低 FPS 抽帧检测即可
+cameras:
+  city_screen_001:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://camera.example.invalid:554/substream
+          roles: [detect]
+        - path: rtsp://camera.example.invalid:554/mainstream
+          roles: [record]
+    detect:
+      width: 640
+      height: 360
+      fps: 2
+    snapshots:
+      enabled: true
+      clean_copy: true
+      timestamp: false
+      bounding_box: false
+    motion:
+      threshold: 35
+      contour_area: 30
+    zones:
+      screen_area:
+        coordinates: 0,0,640,0,640,360,0,360

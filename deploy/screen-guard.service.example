@@ -1,0 +1,29 @@
+[Unit]
+Description=Screen Guard review workbench
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=screen-guard
+Group=screen-guard
+WorkingDirectory=/opt/screen-guard/src/task2_video_panel
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=SCREEN_GUARD_ALLOWED_HOSTS=review.example.internal
+EnvironmentFile=-/etc/screen-guard.env
+ExecStart=/opt/screen-guard/.venv/bin/python -B manage.py --data-dir /var/lib/screen-guard serve --accounts
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+KillMode=control-group
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/screen-guard
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

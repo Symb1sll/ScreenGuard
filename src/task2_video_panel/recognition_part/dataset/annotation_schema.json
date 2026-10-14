@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Screen Guard Multi-label Annotation",
+  "type": "object",
+  "required": ["image_path", "group_id", "labels", "status"],
+  "properties": {
+    "image_path": {"type": "string", "minLength": 1},
+    "group_id": {"type": "string", "minLength": 1},
+    "source_id": {"type": "string"},
+    "captured_at": {"type": "string"},
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["sexual_vulgar", "gambling", "drugs_contraband", "violence_terror", "privacy_leak"]
+      },
+      "uniqueItems": true
+    },
+    "status": {"type": "string", "enum": ["approved", "uncertain", "rejected"]},
+    "reviewer": {"type": "string"},
+    "notes": {"type": "string"}
+  },
+  "additionalProperties": true
+}

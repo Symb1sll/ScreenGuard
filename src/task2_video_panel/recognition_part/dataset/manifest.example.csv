@@ -1,0 +1,5 @@
+image_path,split,labels,group_id,source_id,captured_at,status,reviewer,notes
+images/source_a_000001.jpg,train,,source_a_20260901_morning,source_a,2026-09-01T08:00:01,approved,reviewer_a,正常公益广告
+images/source_a_000120.jpg,train,gambling,source_a_20260901_morning,source_a,2026-09-01T08:02:00,approved,reviewer_a,含博彩导流
+images/source_b_000340.jpg,val,privacy_leak|gambling,source_b_20260901_evening,source_b,2026-09-01T19:11:20,approved,reviewer_b,多标签样本
+images/source_c_000720.jpg,test,violence_terror,source_c_20260902_evening,source_c,2026-09-02T20:10:40,approved,reviewer_c,暴力画面

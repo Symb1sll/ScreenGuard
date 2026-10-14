@@ -1,0 +1,3 @@
+-r src/task2_video_panel/framework_part/requirements.txt
+-r src/task2_video_panel/recognition_part/requirements.txt
+psutil>=5.9

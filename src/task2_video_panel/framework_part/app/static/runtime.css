@@ -1,0 +1,16 @@
+#sourceProfileDialog { width: min(850px, 94vw); max-height: 92vh; overflow-y: auto; }
+#sourceProfileDialog label { display: block; margin: 10px 0; }
+#sourceProfileDialog .check { display: flex; align-items: center; gap: 8px; }
+#sourceProfileDialog .check input { width: auto; }
+#sourceProfileDialog input, #sourceProfileDialog select { max-width: 100%; }
+#sourceProfileDialog details { margin: 18px 0; padding: 12px; border: 1px solid #d7e0e8; border-radius: 8px; }
+#probeImage { width: 100%; max-height: 360px; object-fit: contain; background: #172132; }
+#profileStart { margin-top: 18px; }
+#staleBanner { position: sticky; top: 0; z-index: 10; background: #fff0ed; border-color: #c44a35; }
+.runtime-tasks { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 0 16px; }
+.runtime-metrics { font-size: 12px; line-height: 1.6; }
+#casePanel { border-top: 1px solid #d7e0e8; padding-top: 14px; margin-top: 20px; }
+#automaticAdvice { border-top: 1px solid #d7e0e8; padding-top: 10px; }
+#relatedSegments button { margin: 3px; }
+.frame-strip button img { display: block; width: 96px; height: 60px; object-fit: contain; margin-bottom: 4px; }
+#webcamForm { padding-top: 16px; margin-top: 18px; border-top: 1px solid #d7e0e8; }
